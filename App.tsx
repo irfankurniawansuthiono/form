@@ -90,6 +90,11 @@ export default function App() {
     setUpdateModalVisible(!updateModalVisible);
   };
 
+  // Function Reset Input
+  const resetInput = () => {
+    setNamaDepan("");
+    setNamaBelakang("");
+  };
   // function add
   const addToList = (namaDepan: String, namaBelakang: String) => {
     const oldHistory: Array<String> = history;
@@ -232,29 +237,65 @@ export default function App() {
                 }}
               />
             </View>
+            {/* Button */}
+
             <View
               style={{
-                borderRadius: 10,
-                width: 100,
-                alignSelf: "flex-end",
+                flexDirection: "row",
+                gap: 15,
+                justifyContent: "flex-end",
               }}
             >
-              <TouchableOpacity
+              {/* reset Button */}
+              <View
                 style={{
-                  marginTop: 20,
-                  padding: 10,
-                  backgroundColor: "lightblue",
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
+                  borderRadius: 10,
+                  width: 100,
+                  alignSelf: "flex-end",
                 }}
-                onPress={() => addToList(namaDepan, namaBelakang)}
               >
-                <MaterialIcons name="add" size={20} />
-                <Text>Add</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    marginTop: 20,
+                    padding: 10,
+                    backgroundColor: "red",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
+                  onPress={() => resetInput()}
+                >
+                  <MaterialIcons name="reset-tv" size={20} />
+                  <Text>Reset</Text>
+                </TouchableOpacity>
+              </View>
+              {/* add button */}
+              <View
+                style={{
+                  borderRadius: 10,
+                  width: 100,
+                  alignSelf: "flex-end",
+                }}
+              >
+                <TouchableOpacity
+                  style={{
+                    marginTop: 20,
+                    padding: 10,
+                    backgroundColor: "lightblue",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
+                  onPress={() => addToList(namaDepan, namaBelakang)}
+                >
+                  <MaterialIcons name="add" size={20} />
+                  <Text>Add</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
           <DataTable>
