@@ -1,3 +1,5 @@
-INI HANYA MENGGUNAKAN USE STATE ARRAY!
+npm i
 
-KODE BERANTAKAN? BUKAN URUSAN GWEH!
+npx install-expo-modules@latest (click y)
+
+npm start
