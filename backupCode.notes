@@ -1,0 +1,81 @@
+[javascript]
+// function delete
+const deleteItem = (index: number) => {
+  const newWithDeleteHistory = history.filter(
+    (item: String, idx: number) => idx !== index
+  );
+  Dialog.show({
+    type: ALERT_TYPE.DANGER,
+    title: "Apakah anda yakin untuk menghapus item ini?",
+    textBody: "Anda bisa klik dimana saja untuk batalkan!",
+    button: "Delete",
+    onPressButton: () => {
+      setHistory(newWithDeleteHistory);
+      Dialog.hide();
+    },
+  });
+};
+
+// edit button function
+  const editListIndex = () => {
+    if (namaDepanUpdate === "") {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: "WARNING!",
+        textBody:
+          "jika mengosongkan nama depan, maka nama depan lama akan digunakan kembali!",
+        button: "Okay!",
+      });
+    }
+
+    if (namaDepanUpdate !== "") {
+      history[indexUpdate][0] = namaDepanUpdate;
+    }
+    history[indexUpdate][1] = namaBelakangUpdate;
+
+    toggleModal();
+
+    Toast.show({
+      type: ALERT_TYPE.SUCCESS,
+      title: "UPDATED!",
+      textBody: "Berhasil memperbaharui data!",
+    });
+
+    setNamaBelakangUpdate("");
+    setNamaDepanUpdate("");
+    setIndexUpdate(null);
+  };
+
+  
+  // function add
+  const addToList = (namaDepan: String, namaBelakang: String) => {
+    const oldHistory: Array<String> = history;
+    const newHistory = [...oldHistory, [namaDepan, namaBelakang]];
+    if (namaDepan !== "") {
+      setHistory(newHistory);
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: "Success",
+        textBody: "Berhasil ditambahkan ke list!",
+      });
+    } else {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: "Warning!",
+        textBody: "Mohon Inputkan setidaknya nama depan!",
+        button: "Close",
+        onPressButton: () => {
+          Dialog.hide();
+        },
+      });
+    }
+
+    Keyboard.dismiss();
+
+    setNamaDepan("");
+    setNamaBelakang("");
+  };
+
+[end]
+
+

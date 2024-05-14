@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   ALERT_TYPE,
@@ -6,6 +6,7 @@ import {
   AlertNotificationRoot,
   Toast,
 } from "react-native-alert-notification";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   StyleSheet,
   Text,
@@ -27,62 +28,123 @@ export default function App() {
   const [namaDepanUpdate, setNamaDepanUpdate] = useState("");
   const [namaBelakangUpdate, setNamaBelakangUpdate] = useState("");
   const [indexUpdate, setIndexUpdate] = useState(null);
-  const [history, setHistory] = useState([]);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
-
-  // function delete
-  const deleteItem = (index: number) => {
-    const newWithDeleteHistory = history.filter(
-      (item: String, idx: number) => idx !== index
-    );
-    Dialog.show({
-      type: ALERT_TYPE.DANGER,
-      title: "Apakah anda yakin untuk menghapus item ini?",
-      textBody: "Anda bisa klik dimana saja untuk batalkan!",
-      button: "Delete",
-      onPressButton: () => {
-        setHistory(newWithDeleteHistory);
-        Dialog.hide();
-      },
+  const [historyData, setHistoryData] = useState([]);
+  const [update, setUpdate] = useState(false);
+  // function get list history
+  useEffect(() => {
+    getList("history").then((data) => {
+      setHistoryData(data);
     });
+  }, [update]);
+
+  // function getList
+  const getList = async (key: string) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : [];
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  // function addToList
+  const addToList = async (namaDepan: String, namaBelakang: String) => {
+    const data = [namaDepan, namaBelakang];
+    if (namaDepan === "") {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: "WARNING!",
+        textBody: "Harap isi Nama Depan!",
+        button: "Okay!",
+      });
+    } else {
+      try {
+        const oldHistory = await getList("history");
+        oldHistory.push(data);
+        try {
+          const historyString = JSON.stringify(oldHistory);
+          await AsyncStorage.setItem("history", historyString);
+
+          Toast.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: "SUCCESS!",
+            textBody: "Berhasil menambahkan data!",
+          });
+          setUpdate(!update);
+        } catch (error) {
+          console.error(error);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  // function deleteItem
+  const deleteItem = async (index: Number) => {
+    const history = await getList("history");
+    history.splice(index, 1);
+    try {
+      Dialog.show({
+        type: ALERT_TYPE.DANGER,
+        title: "Apakah anda yakin untuk menghapus item ini?",
+        textBody: "Anda bisa klik dimana saja untuk batalkan!",
+        button: "Delete",
+        onPressButton: async () => {
+          await AsyncStorage.setItem("history", JSON.stringify(history));
+          Dialog.hide();
+          setUpdate(!update);
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // function editListIndex
+  const editListIndex = async () => {
+    if (namaDepanUpdate === "") {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: "WARNING!",
+        textBody: "Nama depan tidak boleh kosong!",
+        button: "Okay!",
+      });
+    }
+    if (namaBelakangUpdate === "") {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: "WARNING!",
+        textBody: "Nama belakang tidak boleh kosong!",
+        button: "Okay!",
+      });
+    }
+
+    try {
+      const history = await getList("history");
+      history[indexUpdate] = [namaDepanUpdate, namaBelakangUpdate];
+      await AsyncStorage.setItem("history", JSON.stringify(history));
+
+      toggleModal();
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: "UPDATED!",
+        textBody: "Berhasil memperbaharui data!",
+      });
+      setNamaBelakangUpdate("");
+      setNamaDepanUpdate("");
+      setIndexUpdate(null);
+      setUpdate(!update);
+    } catch (error) {}
   };
 
   // function update clicked
   const updateClicked = (index: number) => {
     toggleModal();
     setIndexUpdate(index);
-    setNamaDepanUpdate(history[index][0]);
-    setNamaBelakangUpdate(history[index][1]);
-  };
-
-  // edit button function
-  const editListIndex = () => {
-    if (namaDepanUpdate === "") {
-      Dialog.show({
-        type: ALERT_TYPE.WARNING,
-        title: "WARNING!",
-        textBody:
-          "jika mengosongkan nama depan, maka nama depan lama akan digunakan kembali!",
-        button: "Okay!",
-      });
-    }
-
-    if (namaDepanUpdate !== "") {
-      history[indexUpdate][0] = namaDepanUpdate;
-    }
-    history[indexUpdate][1] = namaBelakangUpdate;
-
-    toggleModal();
-
-    Toast.show({
-      type: ALERT_TYPE.SUCCESS,
-      title: "UPDATED!",
-      textBody: "Berhasil memperbaharui data!",
-    });
-
-    setNamaBelakangUpdate("");
-    setNamaDepanUpdate("");
-    setIndexUpdate(null);
+    setNamaDepanUpdate(historyData[index][0]);
+    setNamaBelakangUpdate(historyData[index][1]);
   };
 
   // toggle Modal Update
@@ -91,35 +153,7 @@ export default function App() {
   };
 
   // Function Reset Input
-  const resetInput = () => {
-    setNamaDepan("");
-    setNamaBelakang("");
-  };
-  // function add
-  const addToList = (namaDepan: String, namaBelakang: String) => {
-    const oldHistory: Array<String> = history;
-    const newHistory = [...oldHistory, [namaDepan, namaBelakang]];
-    if (namaDepan !== "") {
-      setHistory(newHistory);
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: "Success",
-        textBody: "Berhasil ditambahkan ke list!",
-      });
-    } else {
-      Dialog.show({
-        type: ALERT_TYPE.WARNING,
-        title: "Warning!",
-        textBody: "Mohon Inputkan setidaknya nama depan!",
-        button: "Close",
-        onPressButton: () => {
-          Dialog.hide();
-        },
-      });
-    }
-
-    Keyboard.dismiss();
-
+  const resetInput = async () => {
     setNamaDepan("");
     setNamaBelakang("");
   };
@@ -141,7 +175,7 @@ export default function App() {
                 <TextInput
                   style={styles.boxField}
                   placeholder={
-                    indexUpdate !== null ? history[indexUpdate][0] : "Error"
+                    indexUpdate !== null ? historyData[indexUpdate][0] : "Error"
                   }
                   value={namaDepanUpdate}
                   onChangeText={(text) => {
@@ -153,7 +187,7 @@ export default function App() {
                 <Text>Nama Belakang :</Text>
                 <TextInput
                   placeholder={
-                    indexUpdate !== null ? history[indexUpdate][1] : "Error"
+                    indexUpdate !== null ? historyData[indexUpdate][1] : "Error"
                   }
                   style={styles.boxField}
                   value={namaBelakangUpdate}
@@ -198,8 +232,8 @@ export default function App() {
                   }}
                   onPress={() => toggleModal()}
                 >
-                  <MaterialIcons name="cancel" size={16} />
-                  <Text>Cancel</Text>
+                  <MaterialIcons name="cancel" size={16} color={"white"} />
+                  <Text style={{ color: "white" }}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -267,8 +301,8 @@ export default function App() {
                   }}
                   onPress={() => resetInput()}
                 >
-                  <MaterialIcons name="reset-tv" size={20} />
-                  <Text>Reset</Text>
+                  <MaterialIcons name="reset-tv" size={20} color={"white"} />
+                  <Text style={{ color: "white" }}>Reset</Text>
                 </TouchableOpacity>
               </View>
               {/* add button */}
@@ -305,54 +339,60 @@ export default function App() {
                 <DataTable.Title style={{ flex: 3 }}>Nama</DataTable.Title>
                 <DataTable.Title style={{ flex: 1 }}>Aksi</DataTable.Title>
               </DataTable.Header>
-              {history.map((item, index) => {
-                return (
-                  <DataTable.Row key={index}>
-                    <DataTable.Cell>{index + 1}</DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 3 }}>
-                      {item[0] + " " + item[1]}
-                    </DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 1 }}>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                          gap: 10,
-                          padding: 10,
-                          paddingLeft: 0,
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={[
-                            styles.buttonStyle,
-                            { backgroundColor: "orange" },
-                          ]}
-                          onPress={() => updateClicked(index)}
+              {historyData.length === 0 ? (
+                <Text style={{ textAlign: "center", marginTop: 20 }}>
+                  Tidak ada data
+                </Text>
+              ) : (
+                historyData.map((item, index) => {
+                  return (
+                    <DataTable.Row key={index}>
+                      <DataTable.Cell>{index + 1}</DataTable.Cell>
+                      <DataTable.Cell style={{ flex: 3 }}>
+                        {item[0] + " " + item[1]}
+                      </DataTable.Cell>
+                      <DataTable.Cell style={{ flex: 1 }}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            gap: 10,
+                            padding: 10,
+                            paddingLeft: 0,
+                          }}
                         >
-                          <MaterialIcons
-                            name="edit"
-                            size={20}
-                            color={"white"}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[
-                            styles.buttonStyle,
-                            { backgroundColor: "red" },
-                          ]}
-                          onPress={() => deleteItem(index)}
-                        >
-                          <MaterialIcons
-                            name="delete-forever"
-                            size={20}
-                            color={"white"}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </DataTable.Cell>
-                  </DataTable.Row>
-                );
-              })}
+                          <TouchableOpacity
+                            style={[
+                              styles.buttonStyle,
+                              { backgroundColor: "orange" },
+                            ]}
+                            onPress={() => updateClicked(index)}
+                          >
+                            <MaterialIcons
+                              name="edit"
+                              size={20}
+                              color={"white"}
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[
+                              styles.buttonStyle,
+                              { backgroundColor: "red" },
+                            ]}
+                            onPress={() => deleteItem(index)}
+                          >
+                            <MaterialIcons
+                              name="delete-forever"
+                              size={20}
+                              color={"white"}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  );
+                })
+              )}
             </ScrollView>
           </DataTable>
         </View>
