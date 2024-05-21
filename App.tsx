@@ -349,6 +349,7 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             </View>
+            {/* reset storage button */}
             <TouchableOpacity
               onPress={() => resetStorageData()}
               style={{
