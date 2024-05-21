@@ -157,6 +157,24 @@ export default function App() {
     setNamaDepan("");
     setNamaBelakang("");
   };
+
+  const resetStorageData = async () => {
+    try {
+      Dialog.show({
+        type: ALERT_TYPE.DANGER,
+        title: "Apakah anda yakin untuk menghapus semua data?",
+        textBody: "Anda bisa klik dimana saja untuk batalkan!",
+        button: "Delete",
+        onPressButton: async () => {
+          await AsyncStorage.setItem("history", JSON.stringify([]));
+          Dialog.hide();
+          setUpdate(!update);
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <AlertNotificationRoot theme="dark">
       <SafeAreaView style={{ backgroundColor: "#FFF" }}>
@@ -276,16 +294,16 @@ export default function App() {
             <View
               style={{
                 flexDirection: "row",
-                gap: 15,
-                justifyContent: "flex-end",
+                justifyContent: "center",
+                gap: 10,
               }}
             >
               {/* reset Button */}
               <View
                 style={{
                   borderRadius: 10,
-                  width: 100,
                   alignSelf: "flex-end",
+                  flex: 1,
                 }}
               >
                 <TouchableOpacity
@@ -309,8 +327,8 @@ export default function App() {
               <View
                 style={{
                   borderRadius: 10,
-                  width: 100,
                   alignSelf: "flex-end",
+                  flex: 1,
                 }}
               >
                 <TouchableOpacity
@@ -331,6 +349,22 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             </View>
+            <TouchableOpacity
+              onPress={() => resetStorageData()}
+              style={{
+                marginTop: 20,
+                padding: 10,
+                backgroundColor: "crimson",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              <MaterialIcons name="delete-sweep" size={20} color={"white"} />
+              <Text style={{ color: "white" }}>Delete</Text>
+            </TouchableOpacity>
           </View>
           <DataTable>
             <ScrollView style={{ height: 400 }} stickyHeaderIndices={[0]}>
