@@ -112,15 +112,6 @@ export default function App() {
         button: "Okay!",
       });
     }
-    if (namaBelakangUpdate === "") {
-      Dialog.show({
-        type: ALERT_TYPE.WARNING,
-        title: "WARNING!",
-        textBody: "Nama belakang tidak boleh kosong!",
-        button: "Okay!",
-      });
-    }
-
     try {
       const history = await getList("history");
       history[indexUpdate] = [namaDepanUpdate, namaBelakangUpdate];
